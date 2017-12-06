@@ -54,6 +54,7 @@ class ExifReader
 		$data = [
 			'title' => self::parseTitle($exif),
 			'datetime' => self::parseDateTime($exif),
+			'orientation' => self::parseOrientation($exif),
 		];
 
 		return (object) array_filter($data);
@@ -103,6 +104,28 @@ class ExifReader
 		else if (isset($exif['FILE']['FileDateTime'])) {
 			//~ return $exif['FILE']['FileDateTime'];
 		}
+	}
+
+
+
+	/**
+	 * 1 = Horizontal (normal)
+	 * 2 = Mirror horizontal
+	 * 3 = Rotate 180
+	 * 4 = Mirror vertical
+	 * 5 = Mirror horizontal and rotate 270 clock wise
+	 * 6 = Rotate 90 clock wise
+	 * 7 = Mirror horizontal and rotate 90 clock wise
+	 * 8 = Rotate 270 clock wise
+	 *
+	 * @return int
+	 */
+	private static function parseOrientation(array $exif)
+	{
+		if (isset($exif['IFD0']['Orientation'])) {
+			return (int) $exif['IFD0']['Orientation'];
+		}
+		return 1;
 	}
 
 

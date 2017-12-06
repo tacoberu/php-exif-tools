@@ -52,12 +52,22 @@ class ExifReader
 		}
 
 		$data = [
+			'mime' => self::parseMime($exif),
 			'title' => self::parseTitle($exif),
 			'datetime' => self::parseDateTime($exif),
 			'orientation' => self::parseOrientation($exif),
 		];
 
 		return (object) array_filter($data);
+	}
+
+
+
+	private static function parseMime(array $exif)
+	{
+		if (isset($exif['FILE']['MimeType'])) {
+			return trim($exif['FILE']['MimeType']);
+		}
 	}
 
 

@@ -1,0 +1,24 @@
+{
+	"name": "tacoberu/php-exif-tools",
+	"type": "library",
+	"description": "php-exif-tools is a simple library for manipulate (read and write) with the EXIF meta-data of an image.",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Martin Takáč",
+			"homepage": "https://martin.takac.name"
+		}
+	],
+	"require": {
+		"ext-exif": "*"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^4",
+		"tracy/tracy": "^2.4"
+	},
+	"autoload": {
+		"psr-4": {
+			"Taco\\Tools\\Exif\\": "libs/"
+		}
+	}
+}

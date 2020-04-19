@@ -24,15 +24,25 @@ class ExifReader
      * @var array
      */
 	private static $iptcMapping = array(
-		'title'     => '2#005',
-		'keywords'  => '2#025',
-		'copyright' => '2#116',
-		'caption'   => '2#120',
-		'headline'  => '2#105',
-		'credit'    => '2#110',
-		'source'    => '2#115',
-		'jobtitle'  => '2#085'
+		'name'       => '2#005', // string:..64 / object name
+		'editstatus' => '2#007', // string:..64 / edit status
+		'urgency'    => '2#010', // int:0..9 1 nejvíc, 9 nejméně
+		'category'   => '2#015', // string:..3
+		'keywords'   => '2#025', // string:..64
+		'byline'     => '2#080', // string:..32
+		'jobtitle'   => '2#085', // string:..32
+		'city'       => '2#090', // string:..32
+		'headline'   => '2#105', // string:..256
+		'credit'     => '2#110', // string:..32
+		'source'     => '2#115', // string:..32
+		'copyright'  => '2#116',
+		'contact'    => '2#118', // string:..128
+		'caption'    => '2#120', // string:..2000
+		'writeeditor'=> '2#122', // string:..32
+		'ownerid'    => '2#188', // string:..128
+		'notes'      => '2#230', // string:..1024
 	);
+
 
 
 	function read(SplFileInfo $file)
@@ -43,17 +53,24 @@ class ExifReader
 
 		$exif = @exif_read_data($file, 'IFD0,THUMBNAIL', true);
 		if ($exif === false) {
-			throw new RuntimeException("Illegal EXIF of `{$file}'.");
+			$exif = [
+				'FILE' => [
+					'MimeType' => finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file),
+				],
+			];
 		}
-
 		getimagesize($file, $info);
-		if(isset($info['APP13'])) {
+		if (isset($info['APP13'])) {
 			$exif['IPTC'] = iptcparse($info['APP13']);
 		}
 
 		$data = [
 			'mime' => self::parseMime($exif),
 			'title' => self::parseTitle($exif),
+			'description' => self::parseDescription($exif),
+			'keywords' => self::parseKeywords($exif),
+			'author' => self::parseAuthor($exif),
+			'owner' => self::parseOwner($exif),
 			'datetime' => self::parseDateTime($exif),
 			'orientation' => self::parseOrientation($exif),
 		];
@@ -77,6 +94,9 @@ class ExifReader
 		if (isset($exif['COMPUTED']['UserComment'])) {
 			return trim($exif['COMPUTED']['UserComment']);
 		}
+		elseif (isset($exif['IFD0']['DocumentName'])) {
+			return trim($exif['IFD0']['DocumentName']);
+		}
 		// caption
 		elseif (isset($exif['IPTC'][self::$iptcMapping['caption']][0])) {
 			return trim($exif['IPTC'][self::$iptcMapping['caption']][0]);
@@ -86,8 +106,47 @@ class ExifReader
 			return trim($exif['IPTC'][self::$iptcMapping['headline']][0]);
 		}
 		// graphic name
-		elseif (isset($exif['IPTC'][self::$iptcMapping['title']][0])) {
-			return trim($exif['IPTC'][self::$iptcMapping['title']][0]);
+		elseif (isset($exif['IPTC'][self::$iptcMapping['name']][0])) {
+			return trim($exif['IPTC'][self::$iptcMapping['name']][0]);
+		}
+	}
+
+
+
+	private static function parseDescription(array $exif)
+	{
+		if (isset($exif['IFD0']['ImageDescription'])) {
+			return trim($exif['IFD0']['ImageDescription']);
+		}
+		elseif (isset($exif['IPTC'][self::$iptcMapping['notes']][0])) {
+			return trim($exif['IPTC'][self::$iptcMapping['notes']][0]);
+		}
+	}
+
+
+
+	private static function parseKeywords(array $exif)
+	{
+		if (isset($exif['IPTC'][self::$iptcMapping['keywords']][0])) {
+			return trim($exif['IPTC'][self::$iptcMapping['keywords']][0]);
+		}
+	}
+
+
+
+	private static function parseAuthor(array $exif)
+	{
+		if (isset($exif['IFD0']['Artist'])) {
+			return trim($exif['IFD0']['Artist']);
+		}
+	}
+
+
+
+	private static function parseOwner(array $exif)
+	{
+		if (isset($exif['IPTC'][self::$iptcMapping['ownerid']][0])) {
+			return trim($exif['IPTC'][self::$iptcMapping['ownerid']][0]);
 		}
 	}
 
